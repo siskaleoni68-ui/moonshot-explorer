@@ -1,23 +1,22 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.1ab8852cecbf44b2b5e74f74cb3211f4',
+  appId: 'app.lovable.rocketscience',
   appName: 'Rocket Science',
   webDir: 'dist',
-  server: {
-    url: 'https://1ab8852c-ecbf-44b2-b5e7-4f74cb3211f4.lovableproject.com?forceHideBadge=true',
-    cleartext: true
-  },
   android: {
     backgroundColor: '#0a0f1a',
-    allowMixedContent: true
+    buildOptions: {
+      releaseType: 'APK'
+    }
   },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
       backgroundColor: '#0a0f1a',
       showSpinner: false,
-      androidScaleType: 'CENTER_CROP'
+      androidScaleType: 'CENTER_CROP',
+      launchAutoHide: true
     },
     StatusBar: {
       style: 'DARK',
