@@ -1,10 +1,20 @@
 import { useState } from 'react';
 import { BottomNavigation } from '@/components/BottomNavigation';
+import { PhysicsDiagram } from '@/components/PhysicsDiagram';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ChevronRight, Atom, ArrowRight, Globe, Rocket, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+interface Lesson {
+  id: string;
+  title: string;
+  duration: string;
+  completed: boolean;
+  content: string;
+  diagram?: 'inertia' | 'force' | 'action-reaction' | 'vacuum' | 'thrust' | 'rocket-equation' | 'gravity' | 'escape' | 'orbit';
+}
 
 interface Module {
   id: string;
@@ -14,14 +24,6 @@ interface Module {
   color: string;
   lessons: Lesson[];
   unlocked: boolean;
-}
-
-interface Lesson {
-  id: string;
-  title: string;
-  duration: string;
-  completed: boolean;
-  content: string;
 }
 
 const modules: Module[] = [
@@ -38,21 +40,24 @@ const modules: Module[] = [
         title: 'First Law: Inertia',
         duration: '3 min',
         completed: false,
-        content: "An object at rest stays at rest, and an object in motion stays in motion — unless a force acts on it. In space, there's no air resistance, so rockets keep moving even after engines cut off!"
+        content: "An object at rest stays at rest, and an object in motion stays in motion — unless a force acts on it. In space, there's no air resistance, so rockets keep moving even after engines cut off!",
+        diagram: 'inertia',
       },
       {
         id: 'n2',
         title: 'Second Law: F=ma',
         duration: '4 min',
         completed: false,
-        content: "Force equals mass times acceleration. To accelerate a rocket, you need thrust (force). The less mass your rocket has, the faster it accelerates with the same thrust!"
+        content: "Force equals mass times acceleration. To accelerate a rocket, you need thrust (force). The less mass your rocket has, the faster it accelerates with the same thrust!",
+        diagram: 'force',
       },
       {
         id: 'n3',
         title: 'Third Law: Action-Reaction',
         duration: '3 min',
         completed: false,
-        content: "For every action, there's an equal and opposite reaction. Rockets push hot gas DOWN, and the gas pushes the rocket UP. This is how rockets work in the vacuum of space!"
+        content: "For every action, there's an equal and opposite reaction. Rockets push hot gas DOWN, and the gas pushes the rocket UP. This is how rockets work in the vacuum of space!",
+        diagram: 'action-reaction',
       },
     ],
   },
@@ -69,21 +74,24 @@ const modules: Module[] = [
         title: 'No Air, No Problem',
         duration: '3 min',
         completed: false,
-        content: "Rockets don't push against air — they push against their own exhaust! The expelled gas creates thrust through Newton's Third Law, making rockets perfect for space travel."
+        content: "Rockets don't push against air — they push against their own exhaust! The expelled gas creates thrust through Newton's Third Law, making rockets perfect for space travel.",
+        diagram: 'vacuum',
       },
       {
         id: 's2',
         title: 'Thrust and Propellant',
         duration: '4 min',
         completed: false,
-        content: "Rockets carry their own oxygen (oxidizer) mixed with fuel. When burned, hot gas expands and shoots out the nozzle at incredible speeds, creating thrust."
+        content: "Rockets carry their own oxygen (oxidizer) mixed with fuel. When burned, hot gas expands and shoots out the nozzle at incredible speeds, creating thrust.",
+        diagram: 'thrust',
       },
       {
         id: 's3',
         title: 'The Rocket Equation',
         duration: '5 min',
         completed: false,
-        content: "The Tsiolkovsky equation tells us: to go faster, we need more fuel, but more fuel means more mass to push. It's a tricky balance — that's why rockets have stages!"
+        content: "The Tsiolkovsky equation tells us: to go faster, we need more fuel, but more fuel means more mass to push. It's a tricky balance — that's why rockets have stages!",
+        diagram: 'rocket-equation',
       },
     ],
   },
@@ -100,21 +108,24 @@ const modules: Module[] = [
         title: 'What is Gravity?',
         duration: '3 min',
         completed: false,
-        content: "Gravity is the force that pulls objects together. Earth's gravity pulls everything toward its center at 9.8 m/s². To escape, rockets must fight this constant pull."
+        content: "Gravity is the force that pulls objects together. Earth's gravity pulls everything toward its center at 9.8 m/s². To escape, rockets must fight this constant pull.",
+        diagram: 'gravity',
       },
       {
         id: 'g2',
         title: 'Escape Velocity',
         duration: '4 min',
         completed: false,
-        content: "To leave Earth forever, you need to reach 11.2 km/s (25,000 mph)! That's escape velocity — the speed needed to break free from Earth's gravitational pull."
+        content: "To leave Earth forever, you need to reach 11.2 km/s (25,000 mph)! That's escape velocity — the speed needed to break free from Earth's gravitational pull.",
+        diagram: 'escape',
       },
       {
         id: 'g3',
         title: 'Orbital Mechanics',
         duration: '5 min',
         completed: false,
-        content: "To orbit Earth, go sideways fast enough (7.8 km/s) that as you fall, Earth curves away beneath you. You're always falling — but always missing the ground!"
+        content: "To orbit Earth, go sideways fast enough (7.8 km/s) that as you fall, Earth curves away beneath you. You're always falling — but always missing the ground!",
+        diagram: 'orbit',
       },
     ],
   },
@@ -152,16 +163,11 @@ const modules: Module[] = [
 ];
 
 export default function LearnBasics() {
-  const [expandedLesson, setExpandedLesson] = useState<string | null>(null);
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
 
   const totalLessons = modules.reduce((acc, m) => acc + m.lessons.length, 0);
   const completedCount = completedLessons.size;
   const progressPercent = (completedCount / totalLessons) * 100;
-
-  const toggleLesson = (lessonId: string) => {
-    setExpandedLesson(expandedLesson === lessonId ? null : lessonId);
-  };
 
   const markComplete = (lessonId: string) => {
     setCompletedLessons(prev => new Set([...prev, lessonId]));
@@ -265,6 +271,11 @@ export default function LearnBasics() {
                           <span className="text-xs text-muted-foreground mr-2">{lesson.duration}</span>
                         </AccordionTrigger>
                         <AccordionContent className="px-4 pb-4 pt-2 bg-muted/30 rounded-b-xl">
+                          {/* Animated diagram */}
+                          {lesson.diagram && (
+                            <PhysicsDiagram type={lesson.diagram} className="mb-4" />
+                          )}
+                          
                           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
                             {lesson.content}
                           </p>
