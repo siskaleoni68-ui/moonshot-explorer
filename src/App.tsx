@@ -8,6 +8,7 @@ import LearnBasics from "./pages/LearnBasics";
 import RocketAnatomy from "./pages/RocketAnatomy";
 import VirtualLab from "./pages/VirtualLab";
 import MoonMission from "./pages/MoonMission";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { useOnboardingStore } from "./stores/onboardingStore";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ function AppRoutes() {
       <Route path="/anatomy" element={<RocketAnatomy />} />
       <Route path="/lab" element={<VirtualLab />} />
       <Route path="/mission" element={<MoonMission />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
     </Routes>
   );
 }
