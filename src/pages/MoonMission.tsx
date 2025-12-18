@@ -1,9 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
 import { BottomNavigation } from '@/components/BottomNavigation';
+import { AudioControls } from '@/components/AudioControls';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { useSound } from '@/hooks/useSound';
 import { Rocket, Play, RotateCcw, CheckCircle, XCircle, ChevronRight, Moon, Globe, ArrowUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -38,6 +40,7 @@ export default function MoonMission() {
   const [attempts, setAttempts] = useState(0);
   const [failureReason, setFailureReason] = useState<string | null>(null);
   const [completedPhases, setCompletedPhases] = useState<MissionPhase[]>([]);
+  const { playSound } = useSound();
 
   const currentPhaseIndex = phaseOrder.indexOf(currentPhase);
 
@@ -48,8 +51,9 @@ export default function MoonMission() {
     setCompletedPhases([]);
     setFailureReason(null);
     setAttempts(prev => prev + 1);
+    playSound('launch');
     toast.info('Mission Started!', { description: '3... 2... 1... Liftoff!' });
-  }, []);
+  }, [playSound]);
 
   const resetMission = useCallback(() => {
     setCurrentPhase('ready');
@@ -76,6 +80,7 @@ export default function MoonMission() {
             // Mission failed
             setCurrentPhase('failure');
             setIsRunning(false);
+            playSound('error');
             const reasons = [
               'Engine malfunction during ' + phase.name.toLowerCase(),
               'Navigation error detected',
@@ -91,6 +96,7 @@ export default function MoonMission() {
 
           // Phase complete, move to next
           setCompletedPhases(prev => [...prev, currentPhase]);
+          playSound('notification');
           const nextIndex = phaseOrder.indexOf(currentPhase) + 1;
           if (nextIndex < phaseOrder.length) {
             const nextPhase = phaseOrder[nextIndex];
@@ -98,6 +104,7 @@ export default function MoonMission() {
               setCurrentPhase('success');
               setIsRunning(false);
               setMissionScore(prev => prev + 100);
+              playSound('complete');
               toast.success('Mission Complete!', { description: 'You landed on the Moon!' });
             } else {
               setCurrentPhase(nextPhase);
@@ -111,7 +118,7 @@ export default function MoonMission() {
     }, phase.duration / 50);
 
     return () => clearInterval(progressInterval);
-  }, [isRunning, currentPhase]);
+  }, [isRunning, currentPhase, playSound]);
 
   const getPhaseIcon = (phase: MissionPhase) => {
     switch (phase) {
@@ -133,9 +140,12 @@ export default function MoonMission() {
             <h1 className="font-display text-2xl font-bold">Moon Mission</h1>
             <p className="text-sm text-muted-foreground mt-1">Land safely on the lunar surface</p>
           </div>
-          <div className="text-right">
-            <p className="text-xs text-muted-foreground">Score</p>
-            <p className="font-display font-bold text-lg text-primary">{missionScore}</p>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">Score</p>
+              <p className="font-display font-bold text-lg text-primary">{missionScore}</p>
+            </div>
+            <AudioControls showVolumeControls />
           </div>
         </div>
       </header>

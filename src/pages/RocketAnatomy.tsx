@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { BottomNavigation } from '@/components/BottomNavigation';
+import { AudioControls } from '@/components/AudioControls';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useSound } from '@/hooks/useSound';
 import { Info, Fuel, Gauge, Scale, Flame, CircleDot, Triangle, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -87,16 +89,27 @@ const rocketParts: RocketPart[] = [
 export default function RocketAnatomy() {
   const [selectedPart, setSelectedPart] = useState<RocketPart | null>(null);
   const [activeTab, setActiveTab] = useState('explore');
+  const { playSound } = useSound();
+
+  const selectPart = (part: RocketPart) => {
+    playSound('click');
+    setSelectedPart(part);
+  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border px-4 py-4 safe-area-pt">
-        <h1 className="font-display text-2xl font-bold">Rocket Anatomy</h1>
-        <p className="text-sm text-muted-foreground mt-1">Tap parts to learn what they do</p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="font-display text-2xl font-bold">Rocket Anatomy</h1>
+            <p className="text-sm text-muted-foreground mt-1">Tap parts to learn what they do</p>
+          </div>
+          <AudioControls showVolumeControls />
+        </div>
       </header>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="px-4 py-4">
+      <Tabs value={activeTab} onValueChange={(tab) => { playSound('whoosh'); setActiveTab(tab); }} className="px-4 py-4">
         <TabsList className="grid w-full grid-cols-2 h-12">
           <TabsTrigger value="explore" className="text-sm font-medium">Explore Parts</TabsTrigger>
           <TabsTrigger value="diagram" className="text-sm font-medium">Full Diagram</TabsTrigger>
@@ -113,7 +126,7 @@ export default function RocketAnatomy() {
             >
               {/* Nose cone - clickable */}
               <g 
-                onClick={() => setSelectedPart(rocketParts[0])}
+                onClick={() => selectPart(rocketParts[0])}
                 className="cursor-pointer transition-transform hover:scale-105 active:scale-95"
               >
                 <path
@@ -126,7 +139,7 @@ export default function RocketAnatomy() {
 
               {/* Payload bay */}
               <g 
-                onClick={() => setSelectedPart(rocketParts[1])}
+                onClick={() => selectPart(rocketParts[1])}
                 className="cursor-pointer transition-transform hover:scale-105 active:scale-95"
               >
                 <rect
@@ -140,7 +153,7 @@ export default function RocketAnatomy() {
 
               {/* Fuel tank */}
               <g 
-                onClick={() => setSelectedPart(rocketParts[2])}
+                onClick={() => selectPart(rocketParts[2])}
                 className="cursor-pointer transition-transform hover:scale-105 active:scale-95"
               >
                 <rect
@@ -155,7 +168,7 @@ export default function RocketAnatomy() {
 
               {/* Oxidizer tank */}
               <g 
-                onClick={() => setSelectedPart(rocketParts[3])}
+                onClick={() => selectPart(rocketParts[3])}
                 className="cursor-pointer transition-transform hover:scale-105 active:scale-95"
               >
                 <rect
@@ -170,7 +183,7 @@ export default function RocketAnatomy() {
 
               {/* Engine */}
               <g 
-                onClick={() => setSelectedPart(rocketParts[4])}
+                onClick={() => selectPart(rocketParts[4])}
                 className="cursor-pointer transition-transform hover:scale-105 active:scale-95"
               >
                 <path
@@ -183,7 +196,7 @@ export default function RocketAnatomy() {
 
               {/* Fins */}
               <g 
-                onClick={() => setSelectedPart(rocketParts[5])}
+                onClick={() => selectPart(rocketParts[5])}
                 className="cursor-pointer transition-transform hover:scale-105 active:scale-95"
               >
                 <path
@@ -270,7 +283,7 @@ export default function RocketAnatomy() {
               return (
                 <button
                   key={part.id}
-                  onClick={() => setSelectedPart(part)}
+                  onClick={() => selectPart(part)}
                   className={cn(
                     'touch-card text-left transition-all',
                     isSelected && 'ring-2 ring-primary bg-primary/10'
