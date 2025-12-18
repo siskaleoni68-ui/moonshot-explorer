@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { PhysicsDiagram } from '@/components/PhysicsDiagram';
+import { AudioControls } from '@/components/AudioControls';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { useSound } from '@/hooks/useSound';
 import { ChevronRight, Atom, ArrowRight, Globe, Rocket, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -164,12 +166,14 @@ const modules: Module[] = [
 
 export default function LearnBasics() {
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
+  const { playSound } = useSound();
 
   const totalLessons = modules.reduce((acc, m) => acc + m.lessons.length, 0);
   const completedCount = completedLessons.size;
   const progressPercent = (completedCount / totalLessons) * 100;
 
   const markComplete = (lessonId: string) => {
+    playSound('complete');
     setCompletedLessons(prev => new Set([...prev, lessonId]));
   };
 
@@ -177,8 +181,13 @@ export default function LearnBasics() {
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border px-4 py-4 safe-area-pt">
-        <h1 className="font-display text-2xl font-bold">Learn Basics</h1>
-        <p className="text-sm text-muted-foreground mt-1">Master the fundamentals of rocket science</p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="font-display text-2xl font-bold">Learn Basics</h1>
+            <p className="text-sm text-muted-foreground mt-1">Master the fundamentals of rocket science</p>
+          </div>
+          <AudioControls showVolumeControls />
+        </div>
         
         {/* Progress bar */}
         <div className="mt-4 flex items-center gap-3">

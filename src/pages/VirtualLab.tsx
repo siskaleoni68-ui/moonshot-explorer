@@ -1,10 +1,12 @@
 import { useState, useCallback } from 'react';
 import { BottomNavigation } from '@/components/BottomNavigation';
+import { AudioControls } from '@/components/AudioControls';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { useSound } from '@/hooks/useSound';
 import { Play, RotateCcw, AlertTriangle, CheckCircle, Flame, Scale, Gauge, Rocket } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -23,6 +25,7 @@ export default function VirtualLab() {
   const [isSimulating, setIsSimulating] = useState(false);
   const [simulationProgress, setSimulationProgress] = useState(0);
   const [result, setResult] = useState<SimulationResult | null>(null);
+  const { playSound } = useSound();
 
   const totalMass = fuelMass[0] + payloadMass[0] + 500; // +500 for rocket structure
   const thrustToWeightRatio = (thrust[0] * 1000) / (totalMass * 9.8);
@@ -32,6 +35,7 @@ export default function VirtualLab() {
     setIsSimulating(true);
     setResult(null);
     setSimulationProgress(0);
+    playSound('launch');
 
     // Simulate progress
     const progressInterval = setInterval(() => {
@@ -86,12 +90,14 @@ export default function VirtualLab() {
       setIsSimulating(false);
 
       if (simResult.success) {
+        playSound('success');
         toast.success('Mission Success!', { description: simResult.details });
       } else {
+        playSound('error');
         toast.error(simResult.status, { description: simResult.details });
       }
     }, 2500);
-  }, [thrustToWeightRatio, deltaV]);
+  }, [thrustToWeightRatio, deltaV, playSound]);
 
   const resetSimulation = () => {
     setThrust([300]);
@@ -105,8 +111,13 @@ export default function VirtualLab() {
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border px-4 py-4 safe-area-pt">
-        <h1 className="font-display text-2xl font-bold">Virtual Lab</h1>
-        <p className="text-sm text-muted-foreground mt-1">Build and test your rocket design</p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="font-display text-2xl font-bold">Virtual Lab</h1>
+            <p className="text-sm text-muted-foreground mt-1">Build and test your rocket design</p>
+          </div>
+          <AudioControls showVolumeControls />
+        </div>
       </header>
 
       <main className="px-4 py-6 space-y-6">

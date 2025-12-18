@@ -1,8 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { RocketIcon } from '@/components/RocketIcon';
+import { AudioControls } from '@/components/AudioControls';
 import { useOnboardingStore } from '@/stores/onboardingStore';
+import { useSound } from '@/hooks/useSound';
 import { ChevronRight, Shield, Rocket, Moon, BookOpen, FlaskConical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -39,20 +41,38 @@ export default function Onboarding() {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const navigate = useNavigate();
   const { setOnboardingComplete, setDisclaimerAccepted } = useOnboardingStore();
+  const { playSound, startMusic } = useSound();
+
+  // Start background music on first interaction
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      startMusic();
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+    };
+    document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('touchstart', handleFirstInteraction);
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+    };
+  }, [startMusic]);
 
   const handleNext = useCallback(() => {
+    playSound('whoosh');
     if (currentSlide === 0) {
       setDisclaimerAccepted();
     }
     if (currentSlide < slides.length - 1) {
       setCurrentSlide(prev => prev + 1);
     }
-  }, [currentSlide, setDisclaimerAccepted]);
+  }, [currentSlide, setDisclaimerAccepted, playSound]);
 
   const handleComplete = useCallback(() => {
+    playSound('launch');
     setOnboardingComplete();
-    navigate('/learn');
-  }, [setOnboardingComplete, navigate]);
+    setTimeout(() => navigate('/learn'), 500);
+  }, [setOnboardingComplete, navigate, playSound]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.touches[0].clientX);
@@ -84,6 +104,9 @@ export default function Onboarding() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
+      {/* Audio controls */}
+      <AudioControls className="absolute top-6 left-6 z-10" showVolumeControls />
+      
       {/* Skip button */}
       {currentSlide > 0 && (
         <button
