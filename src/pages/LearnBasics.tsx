@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { PhysicsDiagram } from '@/components/PhysicsDiagram';
 import { AudioControls } from '@/components/AudioControls';
+import { UnlockCelebration } from '@/components/UnlockCelebration';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -266,20 +267,47 @@ const modulesData: ModuleData[] = [
 export default function LearnBasics() {
   const { completedLessons, addCompletedLesson, isLessonCompleted } = useProgressStore();
   const { playSound } = useSound();
+  
+  // Celebration state
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [unlockedModuleName, setUnlockedModuleName] = useState('');
+  const previousUnlockedRef = useRef<Set<string>>(new Set());
+
+  // Helper to check if a module is completed
+  const isModuleCompleted = useCallback((moduleId: string) => {
+    const moduleData = modulesData.find(m => m.id === moduleId);
+    if (!moduleData) return false;
+    return moduleData.lessons.every(lesson => completedLessons.includes(lesson.id));
+  }, [completedLessons]);
 
   // Calculate which modules are unlocked based on completion
   const modules = useMemo(() => {
-    const isModuleCompleted = (moduleId: string) => {
-      const moduleData = modulesData.find(m => m.id === moduleId);
-      if (!moduleData) return false;
-      return moduleData.lessons.every(lesson => completedLessons.includes(lesson.id));
-    };
-
     return modulesData.map(module => ({
       ...module,
       unlocked: !module.requiredModuleId || isModuleCompleted(module.requiredModuleId),
     }));
-  }, [completedLessons]);
+  }, [isModuleCompleted]);
+
+  // Detect newly unlocked modules
+  useEffect(() => {
+    const currentUnlocked = new Set(modules.filter(m => m.unlocked).map(m => m.id));
+    const previousUnlocked = previousUnlockedRef.current;
+    
+    // Find newly unlocked modules (not in previous, but in current)
+    const newlyUnlocked = modules.find(m => 
+      m.unlocked && 
+      !previousUnlocked.has(m.id) && 
+      m.requiredModuleId // Only celebrate unlocks that required completion
+    );
+    
+    if (newlyUnlocked && previousUnlocked.size > 0) {
+      setUnlockedModuleName(newlyUnlocked.title);
+      setShowCelebration(true);
+      playSound('unlock');
+    }
+    
+    previousUnlockedRef.current = currentUnlocked;
+  }, [modules, playSound]);
 
   const totalLessons = modulesData.reduce((acc, m) => acc + m.lessons.length, 0);
   const completedCount = completedLessons.length;
@@ -290,8 +318,20 @@ export default function LearnBasics() {
     addCompletedLesson(lessonId);
   };
 
+  const handleCelebrationComplete = useCallback(() => {
+    setShowCelebration(false);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <>
+      {/* Unlock celebration overlay */}
+      <UnlockCelebration 
+        show={showCelebration} 
+        moduleName={unlockedModuleName} 
+        onComplete={handleCelebrationComplete} 
+      />
+      
+      <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border px-4 py-4 safe-area-pt">
         <div className="flex items-start justify-between">
@@ -446,5 +486,6 @@ export default function LearnBasics() {
 
       <BottomNavigation />
     </div>
+    </>
   );
 }

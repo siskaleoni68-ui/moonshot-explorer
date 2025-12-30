@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useAudioStore } from '@/stores/audioStore';
 
-type SoundEffect = 'click' | 'success' | 'error' | 'launch' | 'whoosh' | 'complete' | 'notification' | 'hover';
+type SoundEffect = 'click' | 'success' | 'error' | 'launch' | 'whoosh' | 'complete' | 'notification' | 'hover' | 'unlock';
 
 let audioContext: AudioContext | null = null;
 
@@ -179,6 +179,50 @@ const playSynthSound = (type: SoundEffect, volume: number) => {
         osc.start(startTime);
         osc.stop(startTime + 0.5);
       });
+      break;
+    }
+    
+    case 'unlock': {
+      // Epic unlock fanfare - triumphant arpeggio with shimmer
+      const fanfareNotes = [
+        { freq: 523.25, delay: 0, duration: 0.3 },      // C5
+        { freq: 659.25, delay: 0.1, duration: 0.3 },    // E5
+        { freq: 783.99, delay: 0.2, duration: 0.3 },    // G5
+        { freq: 1046.50, delay: 0.3, duration: 0.6 },   // C6
+        { freq: 1318.51, delay: 0.35, duration: 0.6 },  // E6
+        { freq: 1567.98, delay: 0.4, duration: 0.8 },   // G6
+      ];
+      
+      fanfareNotes.forEach(({ freq, delay, duration }) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        const startTime = now + delay;
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(0.2, startTime + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      });
+      
+      // Add shimmer effect
+      for (let i = 0; i < 8; i++) {
+        const shimmer = ctx.createOscillator();
+        const shimmerGain = ctx.createGain();
+        shimmer.connect(shimmerGain);
+        shimmerGain.connect(masterGain);
+        shimmer.type = 'sine';
+        shimmer.frequency.value = 2000 + Math.random() * 2000;
+        const startTime = now + 0.4 + i * 0.05;
+        shimmerGain.gain.setValueAtTime(0, startTime);
+        shimmerGain.gain.linearRampToValueAtTime(0.05, startTime + 0.02);
+        shimmerGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+        shimmer.start(startTime);
+        shimmer.stop(startTime + 0.3);
+      }
       break;
     }
     
