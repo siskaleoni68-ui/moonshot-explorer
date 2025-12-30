@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { PhysicsDiagram } from '@/components/PhysicsDiagram';
 import { AudioControls } from '@/components/AudioControls';
@@ -6,6 +5,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useSound } from '@/hooks/useSound';
+import { useProgressStore } from '@/stores/progressStore';
 import { ChevronRight, Atom, ArrowRight, Globe, Rocket, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -165,16 +165,16 @@ const modules: Module[] = [
 ];
 
 export default function LearnBasics() {
-  const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
+  const { completedLessons, addCompletedLesson, isLessonCompleted } = useProgressStore();
   const { playSound } = useSound();
 
   const totalLessons = modules.reduce((acc, m) => acc + m.lessons.length, 0);
-  const completedCount = completedLessons.size;
+  const completedCount = completedLessons.length;
   const progressPercent = (completedCount / totalLessons) * 100;
 
   const markComplete = (lessonId: string) => {
     playSound('complete');
-    setCompletedLessons(prev => new Set([...prev, lessonId]));
+    addCompletedLesson(lessonId);
   };
 
   return (
@@ -202,7 +202,7 @@ export default function LearnBasics() {
       <main className="px-4 py-6 space-y-4">
         {modules.map((module, moduleIndex) => {
           const Icon = module.icon;
-          const moduleCompleted = module.lessons.filter(l => completedLessons.has(l.id)).length;
+          const moduleCompleted = module.lessons.filter(l => isLessonCompleted(l.id)).length;
           const isModuleComplete = moduleCompleted === module.lessons.length;
 
           return (
@@ -252,7 +252,7 @@ export default function LearnBasics() {
               {module.unlocked && (
                 <Accordion type="single" collapsible className="space-y-2">
                   {module.lessons.map((lesson) => {
-                    const isComplete = completedLessons.has(lesson.id);
+                    const isComplete = isLessonCompleted(lesson.id);
                     
                     return (
                       <AccordionItem

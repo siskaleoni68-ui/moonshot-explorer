@@ -7,6 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useSound } from '@/hooks/useSound';
+import { useProgressStore } from '@/stores/progressStore';
 import { Play, RotateCcw, AlertTriangle, CheckCircle, Flame, Scale, Gauge, Rocket } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -26,6 +27,7 @@ export default function VirtualLab() {
   const [simulationProgress, setSimulationProgress] = useState(0);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const { playSound } = useSound();
+  const { incrementSimulation, simulationCount, successfulLaunches, bestAltitude } = useProgressStore();
 
   const totalMass = fuelMass[0] + payloadMass[0] + 500; // +500 for rocket structure
   const thrustToWeightRatio = (thrust[0] * 1000) / (totalMass * 9.8);
@@ -88,6 +90,7 @@ export default function VirtualLab() {
 
       setResult(simResult);
       setIsSimulating(false);
+      incrementSimulation(simResult.success, simResult.maxAltitude);
 
       if (simResult.success) {
         playSound('success');
@@ -97,7 +100,7 @@ export default function VirtualLab() {
         toast.error(simResult.status, { description: simResult.details });
       }
     }, 2500);
-  }, [thrustToWeightRatio, deltaV, playSound]);
+  }, [thrustToWeightRatio, deltaV, playSound, incrementSimulation]);
 
   const resetSimulation = () => {
     setThrust([300]);
@@ -272,6 +275,27 @@ export default function VirtualLab() {
             </div>
           </div>
         </Card>
+
+        {/* Career Stats */}
+        {simulationCount > 0 && (
+          <Card className="p-5 bg-primary/5 border-primary/20">
+            <h3 className="font-display font-semibold mb-3">Your Career Stats</h3>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <p className="text-2xl font-bold text-primary">{simulationCount}</p>
+                <p className="text-xs text-muted-foreground">Launches</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-success">{successfulLaunches}</p>
+                <p className="text-xs text-muted-foreground">Successes</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-accent">{bestAltitude}</p>
+                <p className="text-xs text-muted-foreground">Best Alt (km)</p>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Result panel */}
         {result && (
